@@ -3,8 +3,6 @@ import BaseStation as bs_module
 import UserEquipments as ue_module
 import Coordinate as utl
 import math
-# import base_station as bs_module
-# import user_equipments as ue_module
 
 BANDWIDTH_PER_USER = (10 ** 6)
 MAX_RANGE_OF_BS = 2000
@@ -33,7 +31,7 @@ def assign_id_coord_and_null_base_to_user(position_of_ue):
     null_bs = bs_module.BaseStation(0, utl.Coordinate(0, 0))
     for coord in position_of_ue:
         #append user object
-        partial_assigned_ue_list.append(ue_module.UserEquipments(_id, coord, null_bs))
+        partial_assigned_ue_list.append(ue_module.UserEquipments(_id, coord, null_bs, -math.inf, 0))
         _id = _id + 1
     return partial_assigned_ue_list
 
@@ -73,21 +71,6 @@ class SimpleCellularNetwork:
         interference = interference + NOISE*BANDWIDTH_PER_USER
         return interference
 
-    def get_sinr_list(self):
-        sinr_list=[]
-        for user_obj in self.partial_assigned_ue_list:
-            sinr = user_obj.power_recieved_from_bs() / self.power_of_interference_noise(user_obj)
-            sinr_list.append((user_obj.get_id(), sinr))
-        return sinr_list
-
-    def get_bitrate_list(self):
-        bitrate_list=[]
-        sinr_list = self.get_sinr_list()
-        for _id, sinr in sinr_list:
-            bitrate = BANDWIDTH_PER_USER * math.log2(1 + sinr)
-            bitrate_list.append((_id, bitrate))
-        return bitrate_list
-
     def user_association_matrix(self):
         print("User's association to target base station:")
         for user_obj in self.partial_assigned_ue_list:
@@ -101,20 +84,30 @@ class SimpleCellularNetwork:
         print()
 
     def SINR_for_each_UE(self):
-        sinr_list = self.get_sinr_list()
+        for user_obj in self.partial_assigned_ue_list:
+            sinr = user_obj.power_recieved_from_bs() / self.power_of_interference_noise(user_obj)
+            user_obj.set_sinr(sinr)
+
         print("SINR for each UE (id,sinr):")
-        for _id, sinr in sinr_list:
-            print("UE with id "+str(_id)+" has SINR of "+str(sinr))
+
+        for user_obj in self.partial_assigned_ue_list:
+            print("UE with id "+str(user_obj.get_id())+" has SINR of "+str(user_obj.get_sinr()))
         print()
 
     def bitrate_of_each_UE_and_system_throughput(self):
-        bitrate_list = self.get_bitrate_list()
+        for user_obj in self.partial_assigned_ue_list:
+            bitrate = BANDWIDTH_PER_USER * math.log2(1 + user_obj.get_sinr())
+            user_obj.set_bitrate(bitrate)
+
         thruPut = 0
+
         print("Bitrate for each UE (id,bitrate):")
-        for _id, bitrate in bitrate_list:
-            thruPut += bitrate
-            print("UE with id "+str(_id)+" has bitrate of "+str(bitrate))
+
+        for user_obj in self.partial_assigned_ue_list:
+            thruPut += user_obj.get_bitrate()
+            print("UE with id "+str(user_obj.get_id())+" has bitrate of "+str(user_obj.get_bitrate()))
         print()
+
         print("System throughput: "+str(thruPut))
         print()
 

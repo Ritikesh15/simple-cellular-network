@@ -1,8 +1,10 @@
 class UserEquipments:
-    def __init__(self, _id, pos, bs):
+    def __init__(self, _id, pos, bs, sinr, bitrate):
         self.user_id = _id
         self.base_station = bs
         self.position = pos
+        self.sinr = sinr
+        self.bitrate = bitrate
 
     def __str__(self):
         return "UE with id "+str(self.user_id) + " is at " + str(self.position)
@@ -18,6 +20,18 @@ class UserEquipments:
     
     def power_recieved_from_bs(self):
         return self.power_recieved(self.base_station)
+
+    def set_sinr(self, sinr):
+        self.sinr = sinr
+
+    def get_sinr(self):
+        return self.sinr
+
+    def set_bitrate(self, bitrate):
+        self.bitrate = bitrate
+    
+    def get_bitrate(self):
+        return self.bitrate
     
     def get_id(self):
         return self.user_id
